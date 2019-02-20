@@ -15,7 +15,7 @@ module.exports = function(grunt) {
             js: '<%= paths.resources %>Public/JavaScript/'
         },
         banner: '/*!\n' +
-            ' * Localizer Across v<%= pkg.version %> (<%= pkg.homepage %>)\n' +
+            ' * Localizer Beebox v<%= pkg.version %> (<%= pkg.homepage %>)\n' +
             ' * Copyright 2017-<%= grunt.template.today("yyyy") %> <%= pkg.author %>\n' +
             ' * Licensed under the <%= pkg.license %> license\n' +
             ' */\n',

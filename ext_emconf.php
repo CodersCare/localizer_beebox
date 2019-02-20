@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Extension Manager/Repository config file for ext "localizer_across".
+ * Extension Manager/Repository config file for ext "localizer_beebox".
  */
 $EM_CONF[$_EXTKEY] = [
-    'title' => 'Localizer Across',
-    'description' => 'Across API for the TYPO3 localizer',
+    'title' => 'Localizer Beebox',
+    'description' => 'Beebox API for the TYPO3 localizer',
     'category' => 'templates',
     'constraints' => [
         'depends' => [
@@ -17,7 +17,7 @@ $EM_CONF[$_EXTKEY] = [
     ],
     'autoload' => [
         'psr-4' => [
-            'Localizationteam\\LocalizerAcross\\' => 'Classes'
+            'Localizationteam\\LocalizerBeebox\\' => 'Classes'
         ],
     ],
     'state' => 'stable',

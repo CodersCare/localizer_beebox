@@ -1,4 +1,4 @@
-Sitepackage for the project "Localizer Across"
+Sitepackage for the project "Localizer Beebox"
 ==============================================================
 
 Add some explanation here.

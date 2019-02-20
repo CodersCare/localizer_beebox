@@ -1,9 +1,9 @@
 {
-  "name": "cybercraft-gmbh-localizer-across",
-  "description": "Across API for the TYPO3 localizer",
+  "name": "cybercraft-gmbh-localizer-beebox",
+  "description": "Beebox API for the TYPO3 localizer",
   "repository": {
     "type": "git",
-    "url": "https://gitlab.com/cybercraft.jh/localizer_across"
+    "url": "https://gitlab.com/cybercraft.jh/localizer_beebox"
   },
   "homepage": "https://cybercraft.gmbh",
   "author": "Jo Hasenau",

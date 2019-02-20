@@ -1,7 +1,7 @@
 {
-    "name": "localizationteam/localizer-across",
+    "name": "localizationteam/localizer-beebox",
     "type": "typo3-cms-extension",
-    "description": "Across API for the TYPO3 localizer",
+    "description": "Beebox API for the TYPO3 localizer",
     "homepage": "https://cybercraft.gmbh",
     "license": ["GPL-2.0-or-later"],
     "keywords": ["TYPO3 CMS"],
@@ -12,7 +12,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Localizationteam\\LocalizerAcross\\": "Classes/"
+            "Localizationteam\\LocalizerBeebox\\": "Classes/"
         }
     }
 }
