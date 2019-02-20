@@ -1,3 +1,4 @@
-# localizer_across
+Sitepackage for the project "Localizer Across"
+==============================================================
 
-Across API for the TYPO3 localizer
+Add some explanation here.
