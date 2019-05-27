@@ -8,7 +8,7 @@
     "version": "8.0.0",
     "require": {
         "typo3/cms-core": "^8.7",
-        "localizationteam/localizer": "^8.0"
+        "localizationteam/localizer": "^8.0 || dev-master"
     },
     "autoload": {
         "psr-4": {
