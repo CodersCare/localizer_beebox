@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<instruction xmlns="http://www.across.net" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.across.net instructions.xsd">
+  <files>
+    <file name="###FILE_NAME###" workflow="###WORKFLOW###" template="Typo3XML" doctypeguid="A4204B55-C1D2-41F1-9FEC-FCCFF4075F45" preprocessing="noAction" />
+  </files>
+  <project name="###PROJECT_NAME###" deadline="###DEADLINE###" projectsettings="###PROJECT_SETTINGS###" mode="released" checkout="project">
+    <projectmanager name="crossdot" />
+    <projectcontact email="###PROJECT_CONTACT###" />
+  </project>
+  <source>
+    <language>
+      <languageDef>
+        <ISO>
+          <language>###SOURCE_LANGUAGE###</language>
+          <country>###SOURCE_COUNTRY###</country>
+        </ISO>
+      </languageDef>
+    </language>
+  </source>
+  <target autostore="true">
+    <language>
+      <languageDef>
+        <ISO>
+          <language>###TARGET_LANGUAGE###</language>
+          <country>###TARGET_COUNTRY###</country>
+        </ISO>
+      </languageDef>
+    </language>
+  </target>
+  <meta />
+</instruction>

@@ -6,6 +6,9 @@
             <authorEmail>info@cybercraft.de</authorEmail>
         </header>
         <body>
+            <trans-unit id="tx_localizer_settings.type.I.localizer_beebox">
+                <source>External Server with Beebox-API</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>
