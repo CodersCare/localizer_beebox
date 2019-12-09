@@ -67,11 +67,11 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     /**
      * Checks if the token is set
      *
-     * @return boolean True if the token is a string, false otherwise
+     * @return boolean True if the token is a non empty string, false otherwise
      */
     public function isConnected()
     {
-        return is_string($this->token);
+        return !empty($this->token);
     }
 
     public function disconnect()
@@ -382,7 +382,6 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
         $content = curl_exec($curl);
 
         $this->checkResponse($curl, $content);
-
         return json_decode($content, true);
     }
 

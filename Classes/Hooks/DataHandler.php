@@ -6,7 +6,6 @@ use Localizationteam\Localizer\Constants;
 use Localizationteam\Localizer\Language;
 use Localizationteam\LocalizerBeebox\Api\ApiCalls;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
-use TYPO3\CMS\Core\Utility\DebugUtility;
 
 /**
  * DataHandler $COMMENT$
