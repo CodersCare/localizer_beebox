@@ -9,8 +9,8 @@ $EM_CONF[$_EXTKEY] = [
     'category' => 'templates',
     'constraints' => [
         'depends' => [
-            'typo3' => '8.7.0-8.7.99',
-            'localizer' => '8.0.0-8.99.99'
+            'typo3' => '9.5.0-9.5.99',
+            'localizer' => '9.0.0-0.0.0'
         ],
         'conflicts' => [
         ],
