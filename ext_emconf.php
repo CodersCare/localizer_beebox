@@ -27,5 +27,5 @@ $EM_CONF[$_EXTKEY] = [
     'author' => 'Jo Hasenau',
     'author_email' => 'info@cybercraft.de',
     'author_company' => 'Cybercraft GmbH',
-    'version' => '8.0.0',
+    'version' => '9.0.0',
 ];

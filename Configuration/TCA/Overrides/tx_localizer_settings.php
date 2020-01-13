@@ -3,10 +3,8 @@ if (!defined('TYPO3_MODE')) {
     die ('Access denied.');
 }
 
-$l10n = 'LLL:EXT:localizer_beebox/Resources/Private/Language/locallang_db.xlf';
-
 $GLOBALS['TCA']['tx_localizer_settings']['columns']['type']['config']['items'][] = [
-    $l10n . ':tx_localizer_settings.type.I.localizer_beebox', 'localizer_beebox'
+    'LLL:EXT:localizer_beebox/Resources/Private/Language/locallang_db.xlf:tx_localizer_settings.type.I.localizer_beebox', 'localizer_beebox'
 ];
 
 

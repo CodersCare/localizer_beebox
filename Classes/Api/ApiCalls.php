@@ -2,8 +2,6 @@
 
 namespace Localizationteam\LocalizerBeebox\Api;
 
-use Localizationteam\Localizer\Constants;
-
 /**
  * ApiCalls Class used to make calls to the Localizer API
  *
@@ -31,8 +29,8 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
         $password = ''
     ) {
         parent::__construct($type);
-        $this->connectorName = Constants::CONNECTOR_NAME;
-        $this->connectorVersion = Constants::CONNECTOR_VERSION;
+        $this->connectorName = 'Beebox Connector';
+        $this->connectorVersion = '9.0.0';
         $this->setUrl($url);
         $this->setWorkflow($workflow);
         $this->setProjectKey($projectKey);
