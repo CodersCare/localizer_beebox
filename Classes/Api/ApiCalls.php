@@ -500,6 +500,22 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     }
 
     /**
+     * @param String $fileName Name the file will have in the Localizer
+     * @param string $source Source language of the file
+     * @throws Exception This Exception contains details of an eventual error
+     */
+    public function sendInstructions($fileName, $source)
+    {
+        $instructions = $this->getInstructions();
+        if (is_array($instructions)) {
+            $content = json_encode($instructions);
+            $instructionFilename = $fileName . '.beebox';
+            $this->sendFile($content, $instructionFilename, $source, false);
+        }
+    }
+
+
+    /**
      * Sends 1 file to the Beebox 'in' folder
      *
      * @param String $fileContent The content of the file you wish to send
