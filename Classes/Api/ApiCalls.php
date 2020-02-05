@@ -396,13 +396,16 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
         if (!$this->isConnected()) {
             $this->connect();
         }
-
+        
+        $filename= substr($filename, strpos($filename, '\\')+1);
+        $locale = $this->getLocaleFromFile($filename);
+        
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_URL,
             $this->url .
             '/api/files/file?token=' . urlencode($this->token) .
-            '&locale=&folder=' . urlencode($folder) .
+            '&locale=' . $locale . '&folder=' . urlencode($folder) .
             '&filename=' . urlencode($filename)
         );
         $content = curl_exec($curl);
@@ -410,6 +413,24 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
         $this->checkResponse($curl, $content);
 
         return $content;
+    }
+
+    /**
+     * Get locale from file path
+     *
+     * @param String $filename Name of the file you wish to obtain locale
+     * @return String The content of the file
+     * @throws \Exception This Exception contains details of an eventual error
+     */
+    private function getLocaleFromFile($fileName)
+    {
+    	preg_match('/_to_(\S*)_/',$fileName, $matches);
+
+		if(empty($matches[1])) {
+			throw new \Exception('Requested language file does not have any locale.');
+		}
+
+	    return str_replace("_","-",$matches[1]); 
     }
 
     /**
