@@ -9,8 +9,8 @@ $EM_CONF[$_EXTKEY] = [
     'category' => 'templates',
     'constraints' => [
         'depends' => [
-            'typo3' => '9.5.0-9.5.99',
-            'localizer' => '9.0.0-0.0.0'
+            'typo3' => '10.4.0-10.4.99',
+            'localizer' => '10.0.0-0.0.0'
         ],
         'conflicts' => [
         ],
@@ -27,5 +27,5 @@ $EM_CONF[$_EXTKEY] = [
     'author' => 'Jo Hasenau',
     'author_email' => 'info@cybercraft.de',
     'author_company' => 'Cybercraft GmbH',
-    'version' => '9.0.0',
+    'version' => '10.0.0',
 ];
