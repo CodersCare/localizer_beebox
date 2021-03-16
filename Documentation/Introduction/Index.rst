@@ -12,7 +12,7 @@ Introduction
 What does it do?
 ================
 
-This extension provides a fully automated workflow and a graphical user interface for the well known `Localization Manager (l10nmgr) <https://extensions.typo3.org/extension/l10nmgr/>`.
+This extension provides a fully automated workflow and a graphical user interface for the well known `Localization Manager (l10nmgr) <https://extensions.typo3.org/extension/l10nmgr/>`__.
 
 While the L10nmgr still provides exports and imports of records and files, the Localizer will take care of all the necessary steps in between.
 Editors responsible for translations won't have to deal with any L10nmgr configurations anymore and as an administrator you create just one configuration per Localizer Project.
