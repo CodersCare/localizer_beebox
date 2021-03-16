@@ -35,9 +35,7 @@ If you haven't got a Beebox account yet, make sure to contact the people at Word
 
    Wordbee Logo
 
-Wordbee S.A.
-11 boulevard du Jazz
-L-4370 Belvaux
+Wordbee S.A., 11 boulevard du Jazz, L-4370 Belvaux
 
 `Wordbee TYPO3 translation connectors <https://www.wordbee.com/translation-connectors/typo3-translation-localization/>`__
 
