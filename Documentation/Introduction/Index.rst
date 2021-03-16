@@ -30,10 +30,8 @@ If you haven't got a Beebox account yet, make sure to contact the people at Word
 .. _wordbeelogo:
 .. figure:: ../Images/Logos/Wordbee_Logo.png
    :class: with-shadow
-   :alt: Localizer Selector
+   :alt: Wordbee Logo
    :width: 517px
-
-   Wordbee Logo
 
 Wordbee S.A., 11 boulevard du Jazz, L-4370 Belvaux
 
