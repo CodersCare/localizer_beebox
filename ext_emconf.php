@@ -3,7 +3,7 @@
 /**
  * Extension Manager/Repository config file for ext "localizer_beebox".
  */
-$EM_CONF[$_EXTKEY] = [
+$EM_CONF['localizer_beebox'] = [
     'title' => 'Localizer Beebox',
     'description' => 'Beebox API for the TYPO3 localizer',
     'category' => 'templates',

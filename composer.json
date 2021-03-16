@@ -8,11 +8,16 @@
     "version": "10.0.0",
     "require": {
         "typo3/cms-core": "^10.4",
-        "localizationteam/localizer": "^10.0 || dev-master"
+        "localizationteam/localizer": "^10.0"
     },
     "autoload": {
         "psr-4": {
             "Localizationteam\\LocalizerBeebox\\": "Classes/"
+        }
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "localizer_beebox"
         }
     }
 }
