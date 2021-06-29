@@ -386,24 +386,25 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     /**
      * Downloads the specified file
      *
-     * @param String $filename Name of the file you wish to retrieve
-     * @param String $folder Name of the folder where the file is located (usually the target language)
-     * @return String The content of the file
+     * @param array $file The array with information to the file to download
+     * @return string The content of the file
      * @throws \Exception This Exception contains details of an eventual error
      */
-    public function getFile($filename, $folder)
+    public function getFile(array $file) : string
     {
         if (!$this->isConnected()) {
             $this->connect();
         }
-        
+
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_URL,
             $this->url .
             '/api/files/file?token=' . urlencode($this->token) .
-            '&locale=&folder=' . urlencode($folder) .
-            '&filename=' . urlencode($filename)
+            '&locale=' . urlencode($file['locale']) .
+            // TODO: Make the usage of folders explicit. Currently they are intermingled with filename.
+            //'&folder=' . urlencode($folder) .
+            '&filename=' . urlencode($file['remoteFilename'])
         );
         $content = curl_exec($curl);
 
