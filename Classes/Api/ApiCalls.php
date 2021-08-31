@@ -12,6 +12,9 @@ namespace Localizationteam\LocalizerBeebox\Api;
  */
 class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
 {
+
+    protected array $align;
+
     /**
      * @param int $type
      * @param string $url
@@ -245,6 +248,11 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     public function setAlign(array $align)
     {
         $this->align = $this->validateTargetLocales($align);
+    }
+
+    public function isAlignSet(): bool
+    {
+        return !empty($this->align);
     }
 
     /**
