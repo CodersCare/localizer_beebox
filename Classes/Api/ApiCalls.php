@@ -6,9 +6,6 @@ namespace Localizationteam\LocalizerBeebox\Api;
  * ApiCalls Class used to make calls to the Localizer API
  *
  * @author      Peter Russ<peter.russ@4many.net>, Jo Hasenau<jh@cybercraft.de>
- * @package     TYPO3
- * @subpackage  localizer
- *
  */
 class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
 {
@@ -65,7 +62,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     /**
      * Checks if the token is set
      *
-     * @return boolean True if the token is a non empty string, false otherwise
+     * @return bool True if the token is a non empty string, false otherwise
      */
     public function isConnected()
     {
@@ -74,13 +71,14 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
 
     public function disconnect()
     {
-
         if (!$this->isConnected()) {
             return;
         }
 
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL,
+        curl_setopt(
+            $curl,
+            CURLOPT_URL,
             $this->url .
             '/api/disconnect?token=' . urlencode($this->token)
         );
@@ -91,7 +89,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     /**
      * Tries to connect to the Beebox using the plugin parameters
      *
-     * @return boolean true if the connection is successful, false otherwise
+     * @return bool true if the connection is successful, false otherwise
      * @throws \Exception This Exception contains details of an eventual error
      */
     public function connect()
@@ -101,7 +99,9 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 20);
             curl_setopt($curl, CURLOPT_TIMEOUT, 15);
-            curl_setopt($curl, CURLOPT_URL,
+            curl_setopt(
+                $curl,
+                CURLOPT_URL,
                 $this->url .
                 '/api/connect?connector=' . urlencode($this->connectorName) .
                 '&version=' . urlencode($this->connectorVersion) .
@@ -114,10 +114,8 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
             $this->token = $content;
 
             return $this->isConnected();
-        } else {
-            throw new \Exception('No Beebox found at given URL ' . $this->url . '. Either the URL is wrong or Beebox is not active!');
         }
-
+        throw new \Exception('No Beebox found at given URL ' . $this->url . '. Either the URL is wrong or Beebox is not active!');
     }
 
     /**
@@ -161,8 +159,10 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
 
             $this->lastError = $details['message'];
 
-            throw new \Exception('Communication error with the Beebox, see the details : (' . var_export($details,
-                    true) . ')');
+            throw new \Exception('Communication error with the Beebox, see the details : (' . var_export(
+                $details,
+                true
+            ) . ')');
         }
     }
 
@@ -178,7 +178,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
                 $this->sourceLanguage = $sourceLanguage;
             } else {
                 throw new \Exception('Source language ' . $sourceLanguage . ' not specified for this project ' .
-                    $this->projectKey . '. Allowed ' . join(' ', array_keys($projectLanguages)));
+                    $this->projectKey . '. Allowed ' . implode(' ', array_keys($projectLanguages)));
             }
         }
     }
@@ -195,14 +195,12 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     public function getProjectLanguages()
     {
         if ($this->projectLanguages === null) {
-
             $array = $this->getProjectInformation();
             $target = [];
             foreach ($array['targetLocales'] as $num => $targetLocale) {
                 $target[$targetLocale] = 1;
             }
             $this->projectLanguages[$array['sourceLocale']] = $target;
-
         }
         return $this->projectLanguages;
     }
@@ -221,7 +219,9 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
 
             $curl = curl_init();
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_URL,
+            curl_setopt(
+                $curl,
+                CURLOPT_URL,
                 $this->url .
                 '/api/details?token=' . urlencode($this->token)
             );
@@ -235,7 +235,6 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     }
 
     /**
-     *
      * Instructs the Beebox to look for translated files in the Beebox "out" directory.
      * If translated files are found, these will be aligned with the source file for the purpose of pretranslation.
      *
@@ -262,7 +261,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
                 $validateLocales[] = $locale;
             } else {
                 throw new \Exception($locale . ' not defined for this project ' . $this->projectKey
-                    . '. Available locales ' . join(' ', array_keys($projectLanguages[$sourceLanguage])));
+                    . '. Available locales ' . implode(' ', array_keys($projectLanguages[$sourceLanguage])));
             }
         }
 
@@ -285,7 +284,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
                 $this->sourceLanguage = $sourceLanguages[0];
             } else {
                 throw new \Exception('For this project ' . $this->projectKey
-                    . ' is more than one source language available. Please specify ' . join(' ', $sourceLanguages));
+                    . ' is more than one source language available. Please specify ' . implode(' ', $sourceLanguages));
             }
         }
 
@@ -295,8 +294,8 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     /**
      * Deletes the specified file in the Beebox
      *
-     * @param String $filename Name of the file you wish to delete
-     * @param String $source source language of the file
+     * @param string $filename Name of the file you wish to delete
+     * @param string $source source language of the file
      * @throws \Exception This Exception contains details of an eventual error
      */
     public function deleteFile($filename, $source)
@@ -306,13 +305,15 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
         }
 
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL,
+        curl_setopt(
+            $curl,
+            CURLOPT_URL,
             $this->url .
             '/api/files/file?token=' . urlencode($this->token) .
             '&locale=' . $source . '&filename=' . urlencode($filename) .
             '&folder='
         );
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE');
         $content = curl_exec($curl);
 
         $this->checkResponse($curl, $content);
@@ -368,14 +369,16 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
         }
         $json = json_encode($query);
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL,
+        curl_setopt(
+            $curl,
+            CURLOPT_URL,
             $this->url .
             '/api/workprogress/translatedfiles'
         );
 
         curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
         curl_setopt($curl, CURLOPT_POSTFIELDS, $json);
         $content = curl_exec($curl);
 
@@ -390,7 +393,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @return string The content of the file
      * @throws \Exception This Exception contains details of an eventual error
      */
-    public function getFile(array $file) : string
+    public function getFile(array $file): string
     {
         if (!$this->isConnected()) {
             $this->connect();
@@ -398,7 +401,9 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
 
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_URL,
+        curl_setopt(
+            $curl,
+            CURLOPT_URL,
             $this->url .
             '/api/files/file?token=' . urlencode($this->token) .
             '&locale=' . urlencode($file['locale']) .
@@ -426,7 +431,9 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
 
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_URL,
+        curl_setopt(
+            $curl,
+            CURLOPT_URL,
             $this->url .
             '/api/files/operations/scan?token=' . urlencode($this->token)
         );
@@ -439,7 +446,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     /**
      * Asks to the Beebox if a scan is required
      *
-     * @return boolean True if a scan is required, false otherwise
+     * @return bool True if a scan is required, false otherwise
      * @throws \Exception This Exception contains details of an eventual error
      */
     public function scanRequired()
@@ -450,7 +457,9 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
 
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_URL,
+        curl_setopt(
+            $curl,
+            CURLOPT_URL,
             $this->url .
             '/api/files/status?token=' . urlencode($this->token)
         );
@@ -461,9 +470,8 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
         $array = json_decode($content, true);
         if (is_array($array) && isset($array['scanRequired'])) {
             return (boolean)$array['scanRequired'];
-        } else {
-            throw new \Exception('unexpected result from: scan required');
         }
+        throw new \Exception('unexpected result from: scan required');
     }
 
     /**
@@ -490,18 +498,19 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
             $url .= '&directoryname=' . urlencode((string)$directoryName);
         }
 
-        curl_setopt($curl, CURLOPT_URL,
+        curl_setopt(
+            $curl,
+            CURLOPT_URL,
             $url
         );
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE');
         $content = curl_exec($curl);
 
         $this->checkResponse($curl, $content);
-
     }
 
     /**
-     * @param String $fileName Name the file will have in the Localizer
+     * @param string $fileName Name the file will have in the Localizer
      * @param string $source Source language of the file
      * @throws Exception This Exception contains details of an eventual error
      */
@@ -515,12 +524,11 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
         }
     }
 
-
     /**
      * Sends 1 file to the Beebox 'in' folder
      *
-     * @param String $fileContent The content of the file you wish to send
-     * @param String $fileName Name the file will have in the Beebox
+     * @param string $fileContent The content of the file you wish to send
+     * @param string $fileName Name the file will have in the Beebox
      * @param string $source Source language of the file
      * @param bool $attachInstruction
      * @throws \Exception This Exception contains details of an eventual error
@@ -542,7 +550,9 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
 
         fseek($fh, 0);
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL,
+        curl_setopt(
+            $curl,
+            CURLOPT_URL,
             $this->url .
             '/api/files/file?token=' . urlencode($this->token) .
             '&locale=' . $source .
@@ -565,7 +575,6 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      */
 
     /**
-     *
      * Request counts/cost
      *
      * (@see http://documents.wordbee.com/display/bb/API+-+Sandbox+-+Counts+and+cost
@@ -576,14 +585,15 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      */
     public function sandboxRequestCostAndCounts($includeCost = false)
     {
-
         if (!$this->isConnected()) {
             $this->connect();
         }
 
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_URL,
+        curl_setopt(
+            $curl,
+            CURLOPT_URL,
             $this->url .
             '/api/files/operations/sandbox/count?token=' . urlencode($this->token) .
             '&getcost=' . ($includeCost === true ? 'true' : 'false')
@@ -592,7 +602,6 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
         $operationId = curl_exec($curl);
 
         $this->checkResponse($curl, $operationId);
-
 
         return $operationId;
     }
@@ -611,7 +620,9 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
 
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_URL,
+        curl_setopt(
+            $curl,
+            CURLOPT_URL,
             $this->url .
             '/api/async/operation/status?token=' . urlencode($this->token) .
             '&opid=' . $operationId
@@ -630,35 +641,36 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     public function sandboxCommitContent()
     {
         if ($this->isAlignSet()) {
-            throw new \Exception('Sandbox alignment limitation. ' .
+            throw new \Exception(
+                'Sandbox alignment limitation. ' .
                 'Clear the sandbox and copy source content, instructions and translated content again to the Beebox. ' .
                 'For further information read http://documents.wordbee.com/display/bb/API+-+Sandbox+-+Commit+content'
             );
-        } else {
-            if (!$this->isConnected()) {
-                $this->connect();
-            }
-            $content = [
+        }
+        if (!$this->isConnected()) {
+            $this->connect();
+        }
+        $content = [
                 'token'   => $this->token,
                 'locale1' => 'sandbox',
                 'locale2' => $this->getSourceLanguage(),
             ];
-            $json = json_encode($content);
+        $json = json_encode($content);
 
-            $curl = curl_init();
-            curl_setopt($curl, CURLOPT_URL,
-                $this->url .
+        $curl = curl_init();
+        curl_setopt(
+            $curl,
+            CURLOPT_URL,
+            $this->url .
                 '/api/files/copy'
-            );
+        );
 
-            curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $json);
-            $content = curl_exec($curl);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $json);
+        $content = curl_exec($curl);
 
-            $this->checkResponse($curl, $content);
-        }
+        $this->checkResponse($curl, $content);
     }
-
 }
