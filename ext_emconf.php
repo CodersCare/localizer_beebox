@@ -10,14 +10,14 @@ $EM_CONF['localizer_beebox'] = [
     'constraints' => [
         'depends' => [
             'typo3' => '10.4.0-10.4.99',
-            'localizer' => '10.0.0-0.0.0'
+            'localizer' => '10.0.0-0.0.0',
         ],
         'conflicts' => [
         ],
     ],
     'autoload' => [
         'psr-4' => [
-            'Localizationteam\\LocalizerBeebox\\' => 'Classes'
+            'Localizationteam\\LocalizerBeebox\\' => 'Classes',
         ],
     ],
     'state' => 'stable',
