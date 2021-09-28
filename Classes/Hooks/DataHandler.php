@@ -34,46 +34,45 @@ class DataHandler
         &$fieldArray,
         \TYPO3\CMS\Core\DataHandling\DataHandler &$tceMain
     ) {
-        if ($table === Constants::TABLE_LOCALIZER_SETTINGS) {
-            if ($this->isSaveAction()) {
-                $currentRecord = $tceMain->recordInfo($table, $id, '*');
-                if ($currentRecord === null) {
-                    $currentRecord = [];
-                }
-                $checkArray = array_merge($currentRecord, $fieldArray);
-                if ($checkArray['type'] === 'localizer_beebox') {
-                    $localizerApi = new ApiCalls(
-                        $checkArray['type'],
-                        $checkArray['url'],
-                        $checkArray['workflow'],
-                        $checkArray['projectkey'],
-                        $checkArray['username'],
-                        $checkArray['password']
-                    );
-                    try {
-                        $valid = $localizerApi->areSettingsValid();
-                        if ($valid === false) {
-                            //should never arrive here as exception should occur!
-                            $fieldArray['hidden'] = 1;
-                        } else {
-                            $fieldArray['hidden'] = 0;
-                            $fieldArray['project_settings'] = $localizerApi->getProjectInformation(true);
-                            $fieldArray['last_error'] = '';
-                            new FlashMessage(
-                                'Localizer settings [' . $checkArray['title'] . '] successfully validated and saved',
-                                'Success',
-                                0
-                            );
-                        }
-                    } catch (\Exception $e) {
-                        $fieldArray['last_error'] = $localizerApi->getLastError();
+        if ($table !== Constants::TABLE_LOCALIZER_SETTINGS) {
+            return;
+        }
+
+        if ($this->isSaveAction()) {
+            $currentRecord = $tceMain->recordInfo($table, $id, '*');
+            if ($currentRecord === null) {
+                $currentRecord = [];
+            }
+            $checkArray = array_merge($currentRecord, $fieldArray);
+            if ($checkArray['type'] === 'localizer_beebox') {
+                $localizerApi = new ApiCalls(
+                    $checkArray['type'],
+                    $checkArray['url'],
+                    $checkArray['workflow'],
+                    $checkArray['projectkey'],
+                    $checkArray['username'],
+                    $checkArray['password']
+                );
+                try {
+                    $valid = $localizerApi->areSettingsValid();
+                    if ($valid === false) {
+                        //should never arrive here as exception should occur!
                         $fieldArray['hidden'] = 1;
-                        $fieldArray['project_settings'] = '';
-                        new FlashMessage($e->getMessage());
-                        new FlashMessage('Localizer settings [' . $checkArray['title'] . '] set to hidden', 'Error', 1);
+                    } else {
+                        $fieldArray['hidden'] = 0;
+                        $fieldArray['project_settings'] = $localizerApi->getProjectInformation(true);
+                        $fieldArray['last_error'] = '';
+                        new FlashMessage('Localizer settings [' . $checkArray['title'] . '] successfully validated and saved',
+                            'Success', 0);
                     }
-                    $localizerApi->disconnect();
+                } catch (\Exception $e) {
+                    $fieldArray['last_error'] = $localizerApi->getLastError();
+                    $fieldArray['hidden'] = 1;
+                    $fieldArray['project_settings'] = '';
+                    new FlashMessage($e->getMessage());
+                    new FlashMessage('Localizer settings [' . $checkArray['title'] . '] set to hidden', 'Error', 1);
                 }
+                $localizerApi->disconnect();
             }
         }
     }
@@ -86,4 +85,5 @@ class DataHandler
         return
             isset($_REQUEST['doSave']) && (bool)$_REQUEST['doSave'];
     }
+
 }
