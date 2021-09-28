@@ -97,28 +97,27 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      */
     public function connect()
     {
-        if ($this->doesLocalizerExist()) {
-            $curl = curl_init();
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 20);
-            curl_setopt($curl, CURLOPT_TIMEOUT, 15);
-            curl_setopt(
-                $curl,
-                CURLOPT_URL,
-                $this->url .
-                '/api/connect?connector=' . urlencode($this->connectorName) .
-                '&version=' . urlencode($this->connectorVersion) .
-                '&project=' . urlencode($this->projectKey) .
-                '&login=' . urlencode($this->username) .
-                '&pwd=' . urlencode($this->password)
-            );
-            $content = curl_exec($curl);
-            $this->checkResponse($curl, $content);
-            $this->token = $content;
-
-            return $this->isConnected();
+        if ($this->doesLocalizerExist() === false) {
+            throw new \Exception('No Beebox found at given URL ' . $this->url . '. Either the URL is wrong or Beebox is not active!');
         }
-        throw new \Exception('No Beebox found at given URL ' . $this->url . '. Either the URL is wrong or Beebox is not active!');
+
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 20);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 15);
+        curl_setopt($curl, CURLOPT_URL,
+            $this->url .
+            '/api/connect?connector=' . urlencode($this->connectorName) .
+            '&version=' . urlencode($this->connectorVersion) .
+            '&project=' . urlencode($this->projectKey) .
+            '&login=' . urlencode($this->username) .
+            '&pwd=' . urlencode($this->password)
+        );
+        $content = curl_exec($curl);
+        $this->checkResponse($curl, $content);
+        $this->token = $content;
+
+        return $this->isConnected();
     }
 
     /**
@@ -175,14 +174,16 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      */
     public function setSourceLanguage($sourceLanguage)
     {
-        if ($sourceLanguage !== '') {
-            $projectLanguages = $this->getProjectLanguages();
-            if (isset($projectLanguages[$sourceLanguage])) {
-                $this->sourceLanguage = $sourceLanguage;
-            } else {
-                throw new \Exception('Source language ' . $sourceLanguage . ' not specified for this project ' .
-                    $this->projectKey . '. Allowed ' . implode(' ', array_keys($projectLanguages)));
-            }
+        if ($sourceLanguage === '') {
+            return;
+        }
+
+        $projectLanguages = $this->getProjectLanguages();
+        if (isset($projectLanguages[$sourceLanguage])) {
+            $this->sourceLanguage = $sourceLanguage;
+        } else {
+            throw new \Exception('Source language ' . $sourceLanguage . ' not specified for this project ' .
+                $this->projectKey . '. Allowed ' . join(' ', array_keys($projectLanguages)));
         }
     }
 
@@ -476,9 +477,11 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
         $this->checkResponse($curl, $content);
 
         $array = json_decode($content, true);
+
         if (is_array($array) && isset($array['scanRequired'])) {
             return (boolean)$array['scanRequired'];
         }
+
         throw new \Exception('unexpected result from: scan required');
     }
 
