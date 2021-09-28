@@ -11,10 +11,7 @@ use TYPO3\CMS\Core\Messaging\FlashMessage;
  * DataHandler $COMMENT$
  *
  * @author      Peter Russ<peter.russ@4many.net>
- * @package     TYPO3
  * @date        20150803-2107
- * @subpackage  localizer
- *
  */
 class DataHandler
 {
@@ -62,8 +59,11 @@ class DataHandler
                             $fieldArray['hidden'] = 0;
                             $fieldArray['project_settings'] = $localizerApi->getProjectInformation(true);
                             $fieldArray['last_error'] = '';
-                            new FlashMessage('Localizer settings [' . $checkArray['title'] . '] successfully validated and saved',
-                                'Success', 0);
+                            new FlashMessage(
+                                'Localizer settings [' . $checkArray['title'] . '] successfully validated and saved',
+                                'Success',
+                                0
+                            );
                         }
                     } catch (\Exception $e) {
                         $fieldArray['last_error'] = $localizerApi->getLastError();
@@ -86,5 +86,4 @@ class DataHandler
         return
             isset($_REQUEST['doSave']) && (bool)$_REQUEST['doSave'];
     }
-
 }
