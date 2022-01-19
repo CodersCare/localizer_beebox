@@ -2,6 +2,7 @@
 
 namespace Localizationteam\LocalizerBeebox\Hooks;
 
+use Exception;
 use Localizationteam\Localizer\Constants;
 use Localizationteam\Localizer\Language;
 use Localizationteam\LocalizerBeebox\Api\ApiCalls;
@@ -68,7 +69,7 @@ class DataHandler
                             0
                         );
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $fieldArray['last_error'] = $localizerApi->getLastError();
                     $fieldArray['hidden'] = 1;
                     $fieldArray['project_settings'] = '';
