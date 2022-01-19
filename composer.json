@@ -8,15 +8,40 @@
     "version": "10.0.0",
     "require": {
         "typo3/cms-core": "^10.4",
-        "localizationteam/localizer": "^10.0 || dev-master"
-    },
-    "require-dev": {
-      "friendsofphp/php-cs-fixer": "^3.0",
-      "phpstan/phpstan": "^0.12.96"
+        "typo3/cms-extensionmanager": "^10.4",
+        "typo3/cms-scheduler": "^10.4",
+        "typo3/cms-install": "^10.4",
+        "typo3/cms-backend": "^10.4",
+        "typo3/cms-lang": "^10.4",
+        "localizationteam/localizer": "^10.0 || dev-master",
+		"ext-pdo": "*",
+		"ext-json": "*",
+		"ext-zip": "*"
 	},
     "autoload": {
         "psr-4": {
             "Localizationteam\\LocalizerBeebox\\": "Classes/"
         }
-    }
+    },
+    "config": {
+		"vendor-dir": ".Build/vendor",
+		"bin-dir": ".Build/bin"
+	},
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "localizer_beebox",
+            "cms-package-dir": "{$vendor-dir}/typo3/cms",
+            "web-dir": ".Build/Web"
+        }
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.1.0",
+        "phpstan/phpstan": "^1.1"
+    },
+    "scripts": {
+        "ci:php:php-cs-fixer:dry": [
+            "php-cs-fixer fix --allow-risky=yes --dry-run -vvv --diff"
+        ],
+        "ci:php:lint": "find *.php Classes Configuration Tests -name '*.php' -print0 | xargs -0 -n 1 -P 4 php -l"
+	}
 }
