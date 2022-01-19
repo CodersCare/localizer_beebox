@@ -10,10 +10,13 @@ namespace Localizationteam\LocalizerBeebox\Api;
 class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
 {
 
-    protected array $align;
+    /**
+     * @var array
+     */
+    protected $align;
 
     /**
-     * @param int $type
+     * @param string $type
      * @param string $url
      * @param string $workflow
      * @param string $projectKey
@@ -21,16 +24,16 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @param string $password
      */
     public function __construct(
-        $type,
-        $url = '',
-        $workflow = '',
-        $projectKey = '',
-        $username = '',
-        $password = ''
+        string $type,
+        string $url = '',
+        string $workflow = '',
+        string $projectKey = '',
+        string $username = '',
+        string $password = ''
     ) {
         parent::__construct($type);
         $this->connectorName = 'Beebox Connector';
-        $this->connectorVersion = '9.0.0';
+        $this->connectorVersion = '10.1.0';
         $this->setUrl($url);
         $this->setWorkflow($workflow);
         $this->setProjectKey($projectKey);
@@ -47,7 +50,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @return bool
      * @throws \Exception
      */
-    public function areSettingsValid($closeConnectionAfterCheck = true)
+    public function areSettingsValid(bool $closeConnectionAfterCheck = true): bool
     {
         if ($this->isConnected()) {
             $this->disconnect();
@@ -67,7 +70,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      *
      * @return bool True if the token is a non empty string, false otherwise
      */
-    public function isConnected()
+    public function isConnected(): bool
     {
         return !empty($this->token);
     }
@@ -95,7 +98,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @return bool true if the connection is successful, false otherwise
      * @throws \Exception This Exception contains details of an eventual error
      */
-    public function connect()
+    public function connect(): bool
     {
         if ($this->doesLocalizerExist() === false) {
             throw new \Exception('No Beebox found at given URL ' . $this->url . '. Either the URL is wrong or Beebox is not active!');
@@ -105,7 +108,9 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 20);
         curl_setopt($curl, CURLOPT_TIMEOUT, 15);
-        curl_setopt($curl, CURLOPT_URL,
+        curl_setopt(
+            $curl,
+            CURLOPT_URL,
             $this->url .
             '/api/connect?connector=' . urlencode($this->connectorName) .
             '&version=' . urlencode($this->connectorVersion) .
@@ -123,7 +128,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     /**
      * @return bool
      */
-    protected function doesLocalizerExist()
+    protected function doesLocalizerExist(): bool
     {
         $doesExist = false;
         $response = file_get_contents($this->url . '/whois');
@@ -145,7 +150,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @param string $content
      * @throws \Exception
      */
-    private function checkResponse($curl, $content)
+    private function checkResponse($curl, string $content)
     {
         $http_status_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $this->lastError = '';
@@ -172,7 +177,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @param string $sourceLanguage
      * @throws \Exception
      */
-    public function setSourceLanguage($sourceLanguage)
+    public function setSourceLanguage(string $sourceLanguage)
     {
         if ($sourceLanguage === '') {
             return;
@@ -183,7 +188,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
             $this->sourceLanguage = $sourceLanguage;
         } else {
             throw new \Exception('Source language ' . $sourceLanguage . ' not specified for this project ' .
-                $this->projectKey . '. Allowed ' . join(' ', array_keys($projectLanguages)));
+                $this->projectKey . '. Allowed ' . implode(' ', array_keys($projectLanguages)));
         }
     }
 
@@ -196,7 +201,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      *                                                                                   'targetX' => 1
      * @throws \Exception This Exception contains details of an eventual error
      */
-    public function getProjectLanguages()
+    public function getProjectLanguages(): array
     {
         if ($this->projectLanguages === null) {
             $array = $this->getProjectInformation();
@@ -214,7 +219,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @return string|array
      * @throws \Exception
      */
-    public function getProjectInformation($asJson = false)
+    public function getProjectInformation(bool $asJson)
     {
         if ($this->projectInformation === null) {
             if (!$this->isConnected()) {
@@ -284,7 +289,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @return string the source language
      * @throws \Exception
      */
-    public function getSourceLanguage()
+    public function getSourceLanguage(): string
     {
         if ($this->sourceLanguage === '') {
             $projectLanguages = $this->getProjectLanguages();
@@ -307,7 +312,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @param string $source source language of the file
      * @throws \Exception This Exception contains details of an eventual error
      */
-    public function deleteFile($filename, $source)
+    public function deleteFile(string $filename, string $source)
     {
         if (!$this->isConnected()) {
             $this->connect();
@@ -333,14 +338,14 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      *
      * @param mixed $files Can be an array containing a list of file-names or false if you do no want to filter
      * (false by default)
-     * @param int $skip Optional number, default is 0. Used for pagination. The files to skip.
-     * @param int $count Optional number, default is 100. Used for pagination and indicates the total number of files
+     * @param int|null $skip Optional number, default is 0. Used for pagination. The files to skip.
+     * @param int|null $count Optional number, default is 100. Used for pagination and indicates the total number of files
      *                   to return from this call. Make sure to specify a limit corresponding to your page
      *                   size (e.g. 100).
      * @return array corresponding to the json returned by the Beebox API
      * @throws \Exception This Exception contains details of an eventual error
      */
-    public function getWorkProgress($files = false, $skip = null, $count = null)
+    public function getWorkProgress($files = false, int $skip = null, int $count = null): array
     {
         if (!$this->isConnected()) {
             $this->connect();
@@ -458,7 +463,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @return bool True if a scan is required, false otherwise
      * @throws \Exception This Exception contains details of an eventual error
      */
-    public function scanRequired()
+    public function scanRequired(): bool
     {
         if (!$this->isConnected()) {
             $this->connect();
@@ -494,7 +499,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @param string $directoryName
      * @throws \Exception
      */
-    public function sandboxClear($directoryName = '')
+    public function sandboxClear(string $directoryName = '')
     {
         if (!$this->isConnected()) {
             $this->connect();
@@ -523,9 +528,9 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     /**
      * @param string $fileName Name the file will have in the Localizer
      * @param string $source Source language of the file
-     * @throws Exception This Exception contains details of an eventual error
+     * @throws \Exception
      */
-    public function sendInstructions($fileName, $source)
+    public function sendInstructions(string $fileName, string $source)
     {
         $instructions = $this->getInstructions();
         if (is_array($instructions)) {
@@ -544,7 +549,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @param bool $attachInstruction
      * @throws \Exception This Exception contains details of an eventual error
      */
-    public function sendFile($fileContent, $fileName, $source, $attachInstruction = true)
+    public function sendFile(string $fileContent, string $fileName, string $source, bool $attachInstruction = true)
     {
         if (!$this->isConnected()) {
             $this->connect();
@@ -573,7 +578,6 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
         curl_setopt($curl, CURLOPT_INFILE, $fh);
         curl_setopt($curl, CURLOPT_INFILESIZE, strlen($fileContent));
         $content = curl_exec($curl);
-
         fclose($fh);
 
         $this->checkResponse($curl, $content);
@@ -594,7 +598,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @return string returns a JSON object with property “op id” and which identifies the asynchronous operation
      * @throws \Exception
      */
-    public function sandboxRequestCostAndCounts($includeCost = false)
+    public function sandboxRequestCostAndCounts(bool $includeCost): string
     {
         if (!$this->isConnected()) {
             $this->connect();
@@ -618,12 +622,12 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     }
 
     /**
-     * @param $operationId
+     * @param string $operationId
      * @return string JSON string
      * @throws \Exception
      * @see http://documents.wordbee.com/display/bb/API+-+Sandbox+-+Counts+and+cost Returns
      */
-    public function sandboxGetAsynchronousCostAndCountsResult($operationId)
+    public function sandboxGetAsynchronousCostAndCountsResult(string $operationId): string
     {
         if (!$this->isConnected()) {
             $this->connect();
@@ -648,6 +652,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
     /**
      * This method copies all sandbox content for regular translation.
      * This is equivalent to sending all the source content one by one to the Beebox using the regular method.
+     * @throws \Exception
      */
     public function sandboxCommitContent()
     {
