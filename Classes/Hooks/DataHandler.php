@@ -2,6 +2,7 @@
 
 namespace Localizationteam\LocalizerBeebox\Hooks;
 
+use Exception;
 use Localizationteam\Localizer\Constants;
 use Localizationteam\Localizer\Language;
 use Localizationteam\LocalizerBeebox\Api\ApiCalls;
@@ -47,11 +48,11 @@ class DataHandler
             if ($checkArray['type'] === 'localizer_beebox') {
                 $localizerApi = new ApiCalls(
                     $checkArray['type'],
-                    $checkArray['url'],
-                    $checkArray['workflow'],
-                    $checkArray['projectkey'],
-                    $checkArray['username'],
-                    $checkArray['password']
+                    (string)$checkArray['url'],
+                    (string)$checkArray['workflow'],
+                    (string)$checkArray['projectkey'],
+                    (string)$checkArray['username'],
+                    (string)$checkArray['password']
                 );
                 try {
                     $valid = $localizerApi->areSettingsValid();
@@ -62,10 +63,13 @@ class DataHandler
                         $fieldArray['hidden'] = 0;
                         $fieldArray['project_settings'] = $localizerApi->getProjectInformation(true);
                         $fieldArray['last_error'] = '';
-                        new FlashMessage('Localizer settings [' . $checkArray['title'] . '] successfully validated and saved',
-                            'Success', 0);
+                        new FlashMessage(
+                            'Localizer settings [' . $checkArray['title'] . '] successfully validated and saved',
+                            'Success',
+                            0
+                        );
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $fieldArray['last_error'] = $localizerApi->getLastError();
                     $fieldArray['hidden'] = 1;
                     $fieldArray['project_settings'] = '';
@@ -85,5 +89,4 @@ class DataHandler
         return
             isset($_REQUEST['doSave']) && (bool)$_REQUEST['doSave'];
     }
-
 }

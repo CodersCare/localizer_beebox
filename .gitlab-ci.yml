@@ -1,0 +1,27 @@
+# Select image from https://hub.docker.com/_/php/
+image: edbizarro/gitlab-ci-pipeline-php:7.4-alpine
+
+# Select what we should cache
+cache:
+  key: $CI_COMMIT_REF_NAME
+  paths:
+    - .Build/
+
+stages:
+  - build
+  - code quality
+
+install:
+  stage: build
+  script:
+    - composer install
+
+lint:
+  stage: code quality
+  script:
+    - composer run ci:php:lint
+
+php-cs-fixer:
+  stage: code quality
+  script:
+    - composer run ci:php:php-cs-fixer:dry
