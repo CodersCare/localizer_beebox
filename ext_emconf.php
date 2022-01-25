@@ -10,7 +10,7 @@ $EM_CONF['localizer_beebox'] = [
     'constraints' => [
         'depends' => [
             'typo3' => '10.4.0-10.4.99',
-            'localizer' => '10.0.0-0.0.0',
+            'localizer' => '10.3.0-0.0.0',
         ],
         'conflicts' => [
         ],

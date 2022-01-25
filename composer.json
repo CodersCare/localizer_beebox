@@ -13,7 +13,7 @@
         "typo3/cms-install": "^10.4",
         "typo3/cms-backend": "^10.4",
         "typo3/cms-lang": "^10.4",
-        "localizationteam/localizer": "^10.0 || dev-master",
+        "localizationteam/localizer": "^10.3",
 		"ext-pdo": "*",
 		"ext-json": "*",
 		"ext-zip": "*"
