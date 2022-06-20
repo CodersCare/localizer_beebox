@@ -2,7 +2,9 @@
 
 namespace Localizationteam\LocalizerBeebox\Api;
 
-use Exception;
+use TYPO3\CMS\Core\Exception;
+use TYPO3\CMS\Core\Http\RequestFactory;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * ApiCalls Class used to make calls to the Localizer API
@@ -11,6 +13,7 @@ use Exception;
  */
 class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
 {
+    protected RequestFactory $requestFactory;
 
     /**
      * @var array
@@ -41,6 +44,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
         $this->setProjectKey($projectKey);
         $this->setUsername($username);
         $this->setPassword($password);
+        $this->requestFactory = GeneralUtility::makeInstance(RequestFactory::class);
     }
 
     /**
@@ -67,31 +71,32 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
         return $areValid;
     }
 
-    /**
-     * Checks if the token is set
-     *
-     * @return bool True if the token is a non empty string, false otherwise
-     */
     public function isConnected(): bool
     {
         return !empty($this->token);
     }
 
-    public function disconnect()
+    public function isDisconnected(): bool
     {
-        if (!$this->isConnected()) {
+        return !$this->isConnected();
+    }
+
+    public function disconnect(): void
+    {
+        if ($this->isDisconnected()) {
             return;
         }
 
-        $curl = curl_init();
-        curl_setopt(
-            $curl,
-            CURLOPT_URL,
-            $this->url .
-            '/api/disconnect?token=' . urlencode($this->token)
-        );
-        curl_exec($curl);
-        $this->token = null;
+        $queryData = [
+            'token' => $this->token,
+        ];
+
+        $url = $this->url . '/api/disconnect?' . http_build_query($queryData);
+
+        $response = $this->requestFactory->request($url);
+        if ($response->getStatusCode() === 204) {
+            $this->token = null;
+        }
     }
 
     /**
@@ -100,79 +105,68 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @return bool true if the connection is successful, false otherwise
      * @throws Exception This Exception contains details of an eventual error
      */
-    public function connect(): bool
+    public function connect() : bool
     {
-        if ($this->doesLocalizerExist() === false) {
-            throw new Exception('No Beebox found at given URL ' . $this->url . '. Either the URL is wrong or Beebox is not active!');
+        if ($this->doesLocalizerExist()) {
+            $queryData = [
+                'connector' => $this->connectorName,
+                'version' => $this->connectorVersion,
+                'project' => $this->projectKey,
+                'login' => $this->username,
+                'pwd' => $this->password,
+            ];
+
+            $options = [
+                'connect_timeout' => 20,
+                'timeout' => 15,
+            ];
+
+            $url = $this->url . '/api/connect?' . http_build_query($queryData);
+            try {
+                $response = $this->requestFactory->request($url, 'GET', $options);
+                $this->token = $response->getBody()->getContents();
+            } catch (\Exception $exception) {
+                $this->checkResponse($exception);
+            }
+
+            return $this->isConnected();
         }
 
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 20);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 15);
-        curl_setopt(
-            $curl,
-            CURLOPT_URL,
-            $this->url .
-            '/api/connect?connector=' . urlencode($this->connectorName) .
-            '&version=' . urlencode($this->connectorVersion) .
-            '&project=' . urlencode($this->projectKey) .
-            '&login=' . urlencode($this->username) .
-            '&pwd=' . urlencode($this->password)
-        );
-        $content = curl_exec($curl);
-        $this->checkResponse($curl, $content);
-        $this->token = $content;
-
-        return $this->isConnected();
+        throw new \Exception('No Beebox found at given URL ' . $this->url . '. Either the URL is wrong or Beebox is not active!');
     }
 
     /**
-     * @return bool
+     * @throws \JsonException
      */
-    protected function doesLocalizerExist(): bool
+    protected function doesLocalizerExist() : bool
     {
         $doesExist = false;
-        $response = file_get_contents($this->url . '/whois');
-        if ($response !== '') {
-            $answer = json_decode($response, true);
-            if ($answer !== null) {
-                if (is_array($answer)) {
-                    if (isset($answer['name'])) {
-                        $doesExist = strtolower($answer['name']) === 'beebox api';
-                    }
-                }
+        $response = $this->requestFactory->request($this->url . '/whois');
+        if ($response->getStatusCode() === 200) {
+            $answer = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+            if (is_array($answer) && isset($answer['name'])) {
+                $doesExist = strtolower($answer['name']) === 'beebox api';
             }
         }
+
         return $doesExist;
     }
 
     /**
-     * @param resource $curl
-     * @param string $content
-     * @throws Exception
+     * @throws \Exception
      */
-    private function checkResponse($curl, string $content)
+    private function checkResponse(\Exception $exception) : void
     {
-        $http_status_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        $this->lastError = '';
-        if ($http_status_code != 200 && $http_status_code != 204) {
-            $details = json_decode($content, true);
-            if (is_array($details) === false) {
-                $details = (array)$details;
-            }
-            $details['http_status_code'] = $http_status_code;
-            if (curl_errno($curl) !== CURLE_OK) {
-                $details['curl_error'] = curl_error($curl);
-            }
+        $details = [];
+        $httpStatusCode = $exception->getCode();
+        $details['http_status_code'] = $httpStatusCode;
+        $details['message'] = $exception->getMessage();
+        $details['file'] = $exception->getFile();
+        $details['line'] = $exception->getLine();
 
-            $this->lastError = $details['message'];
+        $this->lastError = $exception->getMessage();
 
-            throw new Exception('Communication error with the Beebox, see the details : (' . var_export(
-                $details,
-                true
-            ) . ')');
-        }
+        throw new \Exception('Communication error with the Beebox, see the details : (' . var_export($details, true) . ')');
     }
 
     /**
@@ -181,16 +175,14 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      */
     public function setSourceLanguage(string $sourceLanguage)
     {
-        if ($sourceLanguage === '') {
-            return;
-        }
-
-        $projectLanguages = $this->getProjectLanguages();
-        if (isset($projectLanguages[$sourceLanguage])) {
-            $this->sourceLanguage = $sourceLanguage;
-        } else {
-            throw new Exception('Source language ' . $sourceLanguage . ' not specified for this project ' .
-                $this->projectKey . '. Allowed ' . implode(' ', array_keys($projectLanguages)));
+        if ($sourceLanguage !== '') {
+            $projectLanguages = $this->getProjectLanguages();
+            if (isset($projectLanguages[$sourceLanguage])) {
+                $this->sourceLanguage = $sourceLanguage;
+            } else {
+                throw new \Exception('Source language ' . $sourceLanguage . ' not specified for this project ' .
+                    $this->projectKey . '. Allowed ' . implode(' ', array_keys($projectLanguages)));
+            }
         }
     }
 
@@ -221,40 +213,46 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @return string|array
      * @throws Exception
      */
-    public function getProjectInformation(bool $asJson)
+    public function getProjectInformation(bool $asJson = false)
     {
         if ($this->projectInformation === null) {
-            if (!$this->isConnected()) {
+            if ($this->isDisconnected()) {
                 $this->connect();
             }
 
-            $curl = curl_init();
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt(
-                $curl,
-                CURLOPT_URL,
-                $this->url .
-                '/api/details?token=' . urlencode($this->token)
-            );
-            $content = curl_exec($curl);
+            $queryData = [
+                'token' => $this->token,
+            ];
 
-            $this->checkResponse($curl, $content);
-            $this->projectInformation = $content;
+            $url = $this->url . '/api/details?' . http_build_query($queryData);
+
+            try {
+                $response = $this->requestFactory->request($url);
+                $this->projectInformation = $response->getBody()->getContents();
+            } catch (\Exception $exception) {
+                $this->checkResponse($exception);
+            }
         }
 
-        return $asJson === true ? $this->projectInformation : json_decode($this->projectInformation, true);
+        return $asJson === true ? $this->projectInformation : json_decode($this->projectInformation, true, 512,
+            JSON_THROW_ON_ERROR);
     }
 
     /**
      * Instructs the Beebox to look for translated files in the Beebox "out" directory.
-     * If translated files are found, these will be aligned with the source file for the purpose of pretranslation.
+     * If translated files are found, these will be aligned with the source file for the purpose of pre-translation.
      *
      * @param array $align
      * @throws Exception
      */
-    public function setAlign(array $align)
+    public function setAlign(array $align) : void
     {
         $this->align = $this->validateTargetLocales($align);
+    }
+
+    public function isAlignSet() : bool
+    {
+        return !empty($this->align);
     }
 
     /**
@@ -309,47 +307,44 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @param string $source source language of the file
      * @throws Exception This Exception contains details of an eventual error
      */
-    public function deleteFile(string $filename, string $source)
+    public function deleteFile(string $filename, string $source) : void
     {
-        if (!$this->isConnected()) {
+        if ($this->isDisconnected()) {
             $this->connect();
         }
 
-        $curl = curl_init();
-        curl_setopt(
-            $curl,
-            CURLOPT_URL,
-            $this->url .
-            '/api/files/file?token=' . urlencode($this->token) .
-            '&locale=' . $source . '&filename=' . urlencode($filename) .
-            '&folder='
-        );
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE');
-        $content = curl_exec($curl);
+        $queryData = [
+            'token' => $this->token,
+            'locale' => $source,
+            'filename' => $filename,
+            'folder'
+        ];
 
-        $this->checkResponse($curl, $content);
+        $url = $this->url . '/api/files/file?' . http_build_query($queryData);
+
+        try {
+            $response = $this->requestFactory->request($url, 'DELETE');
+            $content = $response->getBody()->getContents();
+        } catch (\Exception $exception) {
+            $this->checkResponse($exception);
+        }
     }
 
     /**
      * Retrieves work progress of the Beebox for the specified files, if no file specified it will retrieve every file
      *
-     * @param mixed $files Can be an array containing a list of file-names or false if you do no want to filter
-     * (false by default)
-     * @param string $targetLocale Target locale i. e. de-DE
-     * @param int|null $skip Optional number, default is 0. Used for pagination. The files to skip.
-     * @param int|null $count Optional number, default is 100. Used for pagination and indicates the total number of files
+     * @param array $files An array containing a list of file-names. Can be empty if you do no want to filter (empty by default)
+     * @param int $skip Optional number, default is 0. Used for pagination. The files to skip.
+     * @param int $count Optional number, default is 100. Used for pagination and indicates the total number of files
      *                   to return from this call. Make sure to specify a limit corresponding to your page
      *                   size (e.g. 100).
+     *
      * @return array corresponding to the json returned by the Beebox API
      * @throws Exception This Exception contains details of an eventual error
      */
-    public function getWorkProgress(
-        $files = false,
-        string $targetLocale = '',
-        int $skip = null,
-        int $count = null
-    ): array {
-        if (!$this->isConnected()) {
+    public function getWorkProgress(array $files = [], int $skip = 0, int $count = 100) : array
+    {
+        if ($this->isDisconnected()) {
             $this->connect();
         }
 
@@ -358,49 +353,43 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
             'filter' => [],
         ];
 
-        if ($targetLocale !== '') {
-            $query['filter']['targetLocale'] = $targetLocale;
-        }
-        if (is_array($files)) {
-            $query['filter']['filePaths'] = [];
-            foreach ($files as $file) {
-                if ($file !== '') {
-                    $query['filter']['filePaths'][] = [
-                        'Item1' => '',
-                        'Item2' => $file,
-                    ];
-                }
-            }
-            if (empty($query['filter']['filePaths'])) {
-                unset($query['filter']['filePaths']);
+        $query['filter']['filePaths'] = [];
+        foreach ($files as $file) {
+            if ($file !== '') {
+                $query['filter']['filePaths'][] = [
+                    'Item1' => '',
+                    'Item2' => $file,
+                ];
             }
         }
-        if ($skip !== null) {
-            if ($skip > 0) {
-                $query['skip'] = $skip;
-            }
+        if (empty($query['filter']['filePaths'])) {
+            unset($query['filter']['filePaths']);
         }
-        if ($count !== null) {
-            if ($count > 0) {
-                $query['count'] = $count;
-            }
-        }
-        $json = json_encode($query);
-        $curl = curl_init();
-        curl_setopt(
-            $curl,
-            CURLOPT_URL,
-            $this->url .
-            '/api/workprogress/translatedfiles'
-        );
 
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $json);
-        $content = curl_exec($curl);
-        $this->checkResponse($curl, $content);
-        return json_decode($content, true);
+        if ($skip > 0) {
+            $query['skip'] = $skip;
+        }
+
+        if ($count > 0) {
+            $query['count'] = $count;
+        }
+
+        $url = $this->url . '/api/workprogress/translatedfiles';
+
+        $options = [
+            'headers' => [
+                'Content-Type' => 'application/json'
+            ],
+            'json' => $query,
+        ];
+
+        try {
+            $response = $this->requestFactory->request($url, 'POST', $options);
+        } catch (\Exception $exception) {
+            $this->checkResponse($exception);
+        }
+
+        return json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
     }
 
     /**
@@ -408,56 +397,58 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      *
      * @param array $file The array with information to the file to download
      * @return string The content of the file
-     * @throws Exception This Exception contains details of an eventual error
+     * @throws \Exception This Exception contains details of an eventual error
      */
-    public function getFile(array $file): string
+    public function getFile(array $file) : string
     {
-        if (!$this->isConnected()) {
+        if ($this->isDisconnected()) {
             $this->connect();
         }
 
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt(
-            $curl,
-            CURLOPT_URL,
-            $this->url .
-            '/api/files/file?token=' . urlencode($this->token) .
-            '&locale=' . urlencode($file['locale']) .
-            // TODO: Make the usage of folders explicit. Currently they are intermingled with filename.
-            //'&folder=' . urlencode($folder) .
-            '&filename=' . urlencode($file['remoteFilename'])
-        );
-        $content = curl_exec($curl);
+        $queryData = [
+            'token' => $this->token,
+            'locale' => $file['locale'],
+            'filename' => $file['remoteFilename'],
+            // TODO: Make the usage of folders explicit.
+            //'folder' => $folder,
+        ];
 
-        $this->checkResponse($curl, $content);
+        $url = $this->url . '/api/files/file?' . http_build_query($queryData);
 
-        return $content;
+        try {
+            $response = $this->requestFactory->request($url);
+        } catch (\Exception $exception) {
+            $this->checkResponse($exception);
+        }
+
+        return $response->getBody()->getContents();
     }
 
     /**
      * Tells the Beebox to scan its files
      *
-     * @throws Exception This Exception contains details of an eventual error
+     * @TODO This method seems not in use and I can't find the documentation for the endpoint at
+     * @TODO https://wordbee.atlassian.net/wiki/spaces/bb/pages/365072/Web+API
+     * @throws \Exception This Exception contains details of an eventual error
      */
-    public function scanFiles()
+    public function scanFiles() : void
     {
-        if (!$this->isConnected()) {
+        if ($this->isDisconnected()) {
             $this->connect();
         }
 
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt(
-            $curl,
-            CURLOPT_URL,
-            $this->url .
-            '/api/files/operations/scan?token=' . urlencode($this->token)
-        );
-        curl_setopt($curl, CURLOPT_PUT, 1);
-        $content = curl_exec($curl);
+        $queryData = [
+            'token' => $this->token,
+        ];
 
         $this->checkResponse($curl, $content);
+        $url = $this->url . '/api/files/operations/scan?' . http_build_query($queryData);
+
+        try {
+            $this->requestFactory->request($url, 'PUT'); // TODO: Why PUT?
+        } catch (\Exception $exception) {
+            $this->checkResponse($exception);
+        }
     }
 
     /**
@@ -468,64 +459,27 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      */
     public function scanRequired(): bool
     {
-        if (!$this->isConnected()) {
+        if ($this->isDisconnected()) {
             $this->connect();
         }
 
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt(
-            $curl,
-            CURLOPT_URL,
-            $this->url .
-            '/api/files/status?token=' . urlencode($this->token)
-        );
-        $content = curl_exec($curl);
+        $queryData = [
+            'token' => $this->token,
+        ];
 
-        $this->checkResponse($curl, $content);
+        $url = $this->url . '/api/files/status?' . http_build_query($queryData);
 
-        $array = json_decode($content, true);
-
-        if (is_array($array) && isset($array['scanRequired'])) {
-            return (boolean)$array['scanRequired'];
+        try {
+            $response = $this->requestFactory->request($url);
+            $content = json_decode($response->getBody()->getContents(), true);
+            if (isset($content['scanRequired'])) {
+                return (boolean)$content['scanRequired'];
+            }
+        } catch (\Exception $exception) {
+            $this->checkResponse($exception);
         }
 
-        throw new Exception('unexpected result from: scan required');
-    }
-
-    /**
-     * This method empties the sandbox.
-     *
-     * If you organise your files in sub directories such as in "folder1000\file1.dox", etc. you may selectively empty
-     * the sandbox by folder ("directory name" set to "folder1000").
-     *
-     * @param string $directoryName
-     * @throws Exception
-     */
-    public function sandboxClear(string $directoryName = '')
-    {
-        if (!$this->isConnected()) {
-            $this->connect();
-        }
-
-        $curl = curl_init();
-        $url = $this->url .
-            '/api/files/directory?token=' . urlencode($this->token) .
-            '&locale=sandbox';
-
-        if ($directoryName !== '') {
-            $url .= '&directoryname=' . urlencode((string)$directoryName);
-        }
-
-        curl_setopt(
-            $curl,
-            CURLOPT_URL,
-            $url
-        );
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE');
-        $content = curl_exec($curl);
-
-        $this->checkResponse($curl, $content);
+        throw new \Exception('unexpected result from: scan required');
     }
 
     /**
@@ -533,7 +487,7 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @param string $source Source language of the file
      * @throws Exception
      */
-    public function sendInstructions(string $fileName, string $source)
+    public function sendInstructions($fileName, $source) : void
     {
         $instructions = $this->getInstructions();
         if (is_array($instructions)) {
@@ -550,11 +504,12 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
      * @param string $fileName Name the file will have in the Beebox
      * @param string $source Source language of the file
      * @param bool $attachInstruction
-     * @throws Exception This Exception contains details of an eventual error
+     *
+     * @throws \Exception This Exception contains details of an eventual error
      */
     public function sendFile(string $fileContent, string $fileName, string $source, bool $attachInstruction = true)
     {
-        if (!$this->isConnected()) {
+        if ($this->isDisconnected()) {
             $this->connect();
         }
 
@@ -562,139 +517,25 @@ class ApiCalls extends \Localizationteam\Localizer\Api\ApiCalls
             $this->sendInstructions($fileName, $source);
         }
 
-        $fh = fopen('php://temp/maxmemory:256000', 'w');
-        if ($fh) {
-            fwrite($fh, $fileContent);
-        }
-
-        fseek($fh, 0);
-        $curl = curl_init();
-        curl_setopt(
-            $curl,
-            CURLOPT_URL,
-            $this->url .
-            '/api/files/file?token=' . urlencode($this->token) .
-            '&locale=' . $source .
-            '&filename=' . urlencode($fileName)
-        );
-        curl_setopt($curl, CURLOPT_PUT, 1);
-        curl_setopt($curl, CURLOPT_INFILE, $fh);
-        curl_setopt($curl, CURLOPT_INFILESIZE, strlen($fileContent));
-        $content = curl_exec($curl);
-        fclose($fh);
-
-        $this->checkResponse($curl, $content);
-    }
-
-    /**
-     * Request counts/cost
-     *
-     * (@see http://documents.wordbee.com/display/bb/API+-+Sandbox+-+Counts+and+cost
-     *
-     * @param bool $includeCost
-     * @return string returns a JSON object with property “op id” and which identifies the asynchronous operation
-     * @throws Exception
-     */
-    public function sandboxRequestCostAndCounts(bool $includeCost): string
-    {
-        if (!$this->isConnected()) {
-            $this->connect();
-        }
-
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt(
-            $curl,
-            CURLOPT_URL,
-            $this->url .
-            '/api/files/operations/sandbox/count?token=' . urlencode($this->token) .
-            '&getcost=' . ($includeCost === true ? 'true' : 'false')
-        );
-        curl_setopt($curl, CURLOPT_PUT, 1);
-        $operationId = curl_exec($curl);
-
-        $this->checkResponse($curl, $operationId);
-
-        return $operationId;
-    }
-
-    /**
-     * (GET) /api/async/operation/status?token=&opid=
-     *
-     * @param string $operationId
-     */
-
-    /**
-     * @param string $operationId
-     * @return string JSON string
-     * @throws Exception
-     * @see http://documents.wordbee.com/display/bb/API+-+Sandbox+-+Counts+and+cost Returns
-     */
-    public function sandboxGetAsynchronousCostAndCountsResult(string $operationId): string
-    {
-        if (!$this->isConnected()) {
-            $this->connect();
-        }
-
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt(
-            $curl,
-            CURLOPT_URL,
-            $this->url .
-            '/api/async/operation/status?token=' . urlencode($this->token) .
-            '&opid=' . $operationId
-        );
-        $content = curl_exec($curl);
-
-        $this->checkResponse($curl, $content);
-
-        return $content;
-    }
-
-    /**
-     * This method copies all sandbox content for regular translation.
-     * This is equivalent to sending all the source content one by one to the Beebox using the regular method.
-     * @throws Exception
-     */
-    public function sandboxCommitContent()
-    {
-        if ($this->isAlignSet()) {
-            throw new Exception(
-                'Sandbox alignment limitation. ' .
-                'Clear the sandbox and copy source content, instructions and translated content again to the Beebox. ' .
-                'For further information read http://documents.wordbee.com/display/bb/API+-+Sandbox+-+Commit+content'
-            );
-        }
-        if (!$this->isConnected()) {
-            $this->connect();
-        }
-        $content = [
-            'token' => $this->token,
-            'locale1' => 'sandbox',
-            'locale2' => $this->getSourceLanguage(),
+        $options = [
+            'headers' => [
+                'Content-Type' => 'Stream'
+            ],
+            'body' =>  $fileContent,
         ];
-        $json = json_encode($content);
 
-        $curl = curl_init();
-        curl_setopt(
-            $curl,
-            CURLOPT_URL,
-            $this->url .
-            '/api/files/copy'
-        );
+        $queryData = [
+            'token' => $this->token,
+            'locale' => $source,
+            'filename' => $fileName,
+        ];
 
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $json);
-        $content = curl_exec($curl);
+        $url = $this->url . '/api/files/file?' . http_build_query($queryData);
 
-        $this->checkResponse($curl, $content);
-    }
-
-    public function isAlignSet(): bool
-    {
-        return !empty($this->align);
+        try {
+            $this->requestFactory->request($url, 'PUT', $options);
+        } catch (\Exception $exception) {
+            $this->checkResponse($exception);
+        }
     }
 }
