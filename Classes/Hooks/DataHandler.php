@@ -24,7 +24,7 @@ class DataHandler
      *
      * @param string $status
      * @param string $table
-     * @param int $id
+     * @param mixed $id
      * @param array $fieldArray
      * @param \TYPO3\CMS\Core\DataHandling\DataHandler $tceMain
      */
