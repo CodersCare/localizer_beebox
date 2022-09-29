@@ -10,7 +10,7 @@ $EM_CONF['localizer_beebox'] = [
     'constraints' => [
         'depends' => [
             'typo3' => '10.4.0-10.4.99',
-            'localizer' => '10.3.0-0.0.0',
+            'localizer' => '10.4.6-0.0.0',
         ],
         'conflicts' => [
         ],
@@ -27,5 +27,5 @@ $EM_CONF['localizer_beebox'] = [
     'author' => 'Jo Hasenau',
     'author_email' => 'info@cybercraft.de',
     'author_company' => 'Cybercraft GmbH',
-    'version' => '10.1.0',
+    'version' => '10.2.0',
 ];
